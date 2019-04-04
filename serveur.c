@@ -10,8 +10,8 @@
 int main(int argc, char ** argv){
 
 	//Déclaration variables utiles
-	char bienv1[NMAX]="Bienvenu Client 1\nAttendez la connection de Client 2\n";
-	char bienv2[NMAX]="Bienvenu Client 2\nAttendez le message de Client 1\n";
+	char bienv1[NMAX]="Bienvenue Client 1\nAttendez la connection de Client 2\n";
+	char bienv2[NMAX]="Bienvenue Client 2\nAttendez le message de Client 1\n";
 	char msg[NMAX];
 	char fin[10]="fin\n";
 	char mess1[NMAX]="Vous pouvez envoyer un message : \nPour terminer tapper fin\n";
