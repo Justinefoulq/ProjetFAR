@@ -3,52 +3,49 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <unistd.h> //close
+#include <string.h>
+#include "FonctionsIntermediaires.h"
 #define NMAX 100
 
+
 int main(int argc, char ** argv){
-	//Creation Socket
-	int dSock = socket(PF_INET, SOCK_STREAM, 0);
-	if (dSock < 0 ){
-		perror("Probleme creation socket");
-		return -1;
-	}
-	//Connection au serveur
-	struct sockaddr_in adServ ;
-	adServ.sin_family = AF_INET ; 
-	adServ.sin_port = htons((short)atoi(argv[1])) ;
-	int res = inet_pton(AF_INET, argv[2], &(adServ.sin_addr)) ; 
-	socklen_t lgA = sizeof(struct sockaddr_in) ;
-	res = connect(dSock, (struct sockaddr *) &adServ, lgA) ; 
-	if (res<0){
-		perror("Probleme de connection au serveur");
-		return -1;
-	}
+
+	//Declaration variables utiles
+	int res;
 	char msg[NMAX];
 	char mot[NMAX];
+	char messfin[NMAX]="La conversation est termine\n";
+	int socketferme = 1;
 
-	res = recv(dSock, msg, sizeof(msg), 0) ;
-	if (res<0){
-		perror("Probleme de reception message 1");
-		return -1;
-	}
-	printf("%s\n",msg);
-
-	while(1){
-		res = recv(dSock, msg, sizeof(msg), 0) ;
-		if (res<0){
-			perror("Probleme de reception message 1");
-			return -1;
-		}
-		printf("%s",msg);
-		printf("					");
-		fgets(mot,NMAX,stdin);
-		res = send(dSock,mot,NMAX,0);
-		if (res<0){
-			perror("Message pas envoyé");
-			return -1;
-		}
-	}
+	//Creation Socket
+	int dSock = CreationSocket();
 	
+	//Connection au serveur
+	ConnectionServeur(dSock,argv[1],argv[2]);
+	
+	Reception(dSock,msg,sizeof(msg));
+	printf("%s\n",msg);
+	
+	//Tant qu'un client n'envoie pas 'fin'
+	while(socketferme){
+		//Ecrit le message recu
+		Reception(dSock,msg,sizeof(msg));
+		printf("%s",msg);
+
+		//Si le message est fin on ferme la socket
+		if (!strcmp(msg,messfin)){
+			close(dSock);
+			socketferme = 0;
+		}
+		else{
+			//Envoie le message tapper par le client
+			printf("					");
+			fgets(mot,NMAX,stdin);
+			Envoi(dSock,mot,sizeof(mot));
+		}
+		
+	}
 
 	return 0;
 }
