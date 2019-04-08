@@ -1,11 +1,8 @@
-
 int CreationSocket();
 
-void CreationServeur(int dS, char *port);
+int CreationServeur(int dS, char *port);
 
 int ConnexionSocket(int dS);
-
-//int EnvoiMsg(int dSC,char* msg);
 
 int Envoi(int dSC,char * msg, int taille);
 
