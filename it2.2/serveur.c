@@ -16,6 +16,7 @@ struct SocketClient{
 	int nbC;
 };
 
+//Fonction d'envoi d'un message
 void EnvMsg(int dS, char* msg){
 	int taille, res;
 	taille = strlen(msg)+1;
@@ -29,6 +30,7 @@ void EnvMsg(int dS, char* msg){
 	}
 }
 
+//Fonction de reception d'un message
 void RecMsg(int dS, char* msg){
 	int taille, res;
 	res = recv(dS,(char*) &taille,sizeof(int),0);
@@ -43,9 +45,10 @@ void RecMsg(int dS, char* msg){
 
 //Variale qui dit si la conv est terminé
 int socketferme = 1;
+//Socket serveur
 int dS;
 
-//Fonction du thread T1
+//Fonction du thread T1 qui correspond au thread d'un client qui recoit un message et l'envoie a tout les autres client
 void *fctT1(void* input){
 	char msg[NMAX];
 	char fin[10]="fin\n";
@@ -56,7 +59,7 @@ void *fctT1(void* input){
 	while(socketferme){
 		//Reception du client 1
 		RecMsg(SocketC->dSC[numClient],msg);
-		//si message est fin
+		//si message est fin on mets din a la conversation en envoyant a tout le groupe le message de fin
 		if (!strcmp(msg,fin)){
 			socketferme=FinGroupe(SocketC->dSC,SocketC->nbC);
 			if (socketferme<0){
@@ -64,6 +67,7 @@ void *fctT1(void* input){
 			}
 			socketferme=0;
 		}
+		//Sinon on envoi a tout les client sauf celui qui a envoyé le message recu
 		else if(socketferme){
 			for(i=0;i<SocketC->nbC;i++){
 				if(i!=numClient){
@@ -75,19 +79,25 @@ void *fctT1(void* input){
 	pthread_exit(NULL);
 	return NULL;
 }
+
+//Fonction du thread T2 qui créer jusqu'à 100 client avec leurs thread T1 correspondant
 void *fctT2(void* input){
 	char * bienv="Bienvenue";
 	int res;
 	struct SocketClient *SocketC =((struct SocketClient*)input);
+	//Tant qu'on a moins de 100 clients
 	while((SocketC->nbC)<100){
+		//Connexion du client n
 		SocketC->dSC[SocketC->nbC]= ConnexionSocket(dS);
 		if(SocketC->dSC[SocketC->nbC] == -1){
 			perror("Probleme connexion SocketC\n");
 		}
+		//Envoie message de bienvenu avec le num du client 
 		EnvMsg(SocketC->dSC[SocketC->nbC],bienv);
 		printf("Client %d connecte\n",SocketC->nbC);
 		Envoi(SocketC->dSC[SocketC->nbC],(char*) &SocketC->nbC,sizeof(int));
 		((struct SocketClient*)input)->nbC++;
+		//Creation du thread du client n qui gere la reception et l'envoie des mess
 		pthread_t T1;
 		res = pthread_create(&T1, NULL, fctT1, (void*)SocketC);
 		if(res<0){
@@ -125,6 +135,7 @@ int main(int argc, char ** argv){
 
 
 	while(1){
+		//Creation du thread T2 qui connecte les clients et créer leurs thread
 		pthread_t T2;
 		res = pthread_create(&T2,NULL, fctT2, (void*)SocketC);
 		if(res<0){
@@ -143,7 +154,6 @@ int main(int argc, char ** argv){
 	
 		printf("\nLa conversation est termine\nEn attente de la connection de nouveaux client\n\n");
 		socketferme=1;
-		//socketferme=1;
 		
 	}
 	
