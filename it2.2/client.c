@@ -13,6 +13,7 @@
 //Variale qui dit si la conv est terminé
 int socketferme = 1;
 
+//Fonction d'envoie d'un message
 void EnvMsg(int dS, char* msg){
 	int taille, res;
 	taille = strlen(msg)+1;
@@ -26,6 +27,7 @@ void EnvMsg(int dS, char* msg){
 	}
 }
 
+//Fonction de reception d'un message
 void RecMsg(int dS, char* msg){
 	int taille, res;
 	res = recv(dS,(char*) &taille,sizeof(int),0);
@@ -62,7 +64,6 @@ void *fctT1(void* input){
 		}
 	}
 	pthread_exit(NULL);
-	
 	return NULL;
 }
 
@@ -75,9 +76,11 @@ void *fctT2(void* input){
 	while(socketferme){
 		//Demande a l'utilisateur le message et l'envoie
 		fgets(msg,NMAX,stdin);
+		//Si le message est fin on l'envoie tel quel
 		if(!strcmp(msg,fin)){
 			EnvMsg(((struct SocketServeur*)input)->dSock,msg);
 		}
+		//Sinon on envoie le pseudo de l'utilisateur suivie du message
 		else{
 			sprintf(tmp,"%s : %s",((struct SocketServeur*)input)->pseudo,msg);
 			EnvMsg(((struct SocketServeur*)input)->dSock,tmp);
@@ -110,10 +113,13 @@ int main(int argc, char ** argv){
 	if (res<0){
 		perror("Probleme Connexion au serveur\n");
 	}
+	
 	//reception mess bienv
 	RecMsg(dSock, msg);
 	recv(dSock,(char*) &SS->num,sizeof(int),0);
 	printf("%s %d\n",msg,SS->num);
+	
+	//Gestion Pseudo
 	printf("Entrer votre pseudo :");
 	fgets(SS->pseudo,15,stdin);
 	SS->pseudo[strlen(SS->pseudo)-1]='\0';
@@ -133,7 +139,7 @@ int main(int argc, char ** argv){
 		perror("Probleme cration thread 1\n");
 	}
 
-
+//Lorsque le message de fin est recu on termine la conversation en fermant la socket puis tuant le thread d'envoi
 	pthread_join(T1,0);
 	printf("La conversation est termine\n");
 	close(dSock);
