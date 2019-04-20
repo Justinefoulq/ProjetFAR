@@ -146,7 +146,7 @@ int main(int argc, char ** argv){
 		//On attend La fermeture des 2 thread
 		while(socketferme){
 		}
-		printf("sortie socket ferme\n");
+		
 		pthread_cancel(T2);
 		SocketC->nbC=0;
 
