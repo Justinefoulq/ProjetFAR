@@ -94,12 +94,14 @@ struct SocketServeur{
 void *fctT3(void* input){
 	char msg[FMAX];
 	char nom[NMAX];
+	char dos[20]="Reception/";
 	int dS=((struct SocketServeur*)input)->dSock;
 	RecMsg(dS,nom);
 	printf("On vous envoi le fichier %s\n",nom);
 	FILE *f = NULL;
-	nom[strlen(nom)-1]='2';
-	f=fopen(nom,"w");
+	nom[strlen(nom)-1]='\0';
+	strcat(dos,nom);
+	f=fopen(dos,"w");
 	RecMsg(dS,msg);
 	fputs(msg,f);
 	fclose(f);
@@ -117,7 +119,7 @@ void *fctT4(void* input){
   	fprintf(fp1,"%s\n","Ce terminal sera utilisé uniquement pour l'affichage");
 	DIR *dp;
 	struct dirent *ep;     
-	dp = opendir ("./");
+	dp = opendir ("./Envoi/");
 	if (dp != NULL) {
 		fprintf(fp1,"Voilà la liste de fichiers :\n");
 		while (ep = readdir (dp)) {
