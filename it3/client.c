@@ -114,6 +114,7 @@ void *fctT3(void* input){
 void *fctT4(void* input){
 	char msg[FMAX]="";
 	char nom[NMAX];
+	char dos[20]="Envoi/";
 	int dS=((struct SocketServeur*)input)->dSock;
 	FILE* fp1 = new_tty();
   	fprintf(fp1,"%s\n","Ce terminal sera utilisé uniquement pour l'affichage");
@@ -136,7 +137,8 @@ void *fctT4(void* input){
 	fgets(fileName,sizeof(fileName),stdin);
 	EnvMsg(dS,fileName);
 	fileName[strlen(fileName)-1]='\0';
-	FILE *fps = fopen(fileName, "r");
+	strcat(dos,fileName);
+	FILE *fps = fopen(dos, "r");
 	if (fps == NULL){
 		printf("Ne peux pas ouvrir le fichier suivant : %s",fileName);
 	}
