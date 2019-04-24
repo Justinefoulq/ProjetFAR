@@ -98,6 +98,7 @@ void *fctT3(void* input){
 	RecMsg(dS,nom);
 	printf("On vous envoi le fichier %s\n",nom);
 	FILE *f = NULL;
+	nom[strlen(nom)-1]='2';
 	f=fopen(nom,"w");
 	RecMsg(dS,msg);
 	fputs(msg,f);
@@ -109,7 +110,7 @@ void *fctT3(void* input){
 
 //Fonction du thread T4 qui demande le nom du fichier contenu dans le dossier, envoi le nom du fichier puis son contenu
 void *fctT4(void* input){
-	char msg[FMAX];
+	char msg[FMAX]="";
 	char nom[NMAX];
 	int dS=((struct SocketServeur*)input)->dSock;
 	FILE* fp1 = new_tty();
@@ -146,6 +147,7 @@ void *fctT4(void* input){
 		}
 		printf("Je suis sorti du while\n");
 		EnvMsg(dS,msg);
+		printf("J'ai envoyer texte fichier\n");
 	}
 	fclose(fps);	
 	pthread_exit(NULL);
@@ -168,6 +170,7 @@ void *fctT1(void* input){
 			socketferme = 0;
 		}
 		else if(!strcmp(msg,messfile)){
+			printf("J'ai recu file\n");
 			pthread_t T3;
 			res = pthread_create(&T3, NULL, fctT3, (void*)SS);
 			if(res<0){
