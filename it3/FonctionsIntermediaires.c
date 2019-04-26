@@ -7,6 +7,8 @@
 #include <string.h>
 #include <limits.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 int CreationSocket(){
 	int dSock = socket(PF_INET, SOCK_STREAM, 0);

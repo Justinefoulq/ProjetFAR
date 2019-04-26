@@ -8,6 +8,8 @@
 #include <pthread.h>
 #include <limits.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #define NMAX 100
 
 //Structure prise ne parametre sur fctT1
@@ -49,6 +51,8 @@ int socketferme = 1;
 void *fctT1(void* input){
 	char msg[NMAX];
 	char fin[10]="fin\n";
+	char file[10]="file\n";
+	int tailleF,i;
 	//Tan que le messaage de fin n'est pas envoyé
 	while(socketferme){
 		//Reception du client 1
@@ -60,6 +64,17 @@ void *fctT1(void* input){
 				perror("Probleme Fin de conv\n");
 			}
 			socketferme=0;
+		}
+		else if(!strcmp(msg,file)){
+			EnvMsg(((struct SocketClient*)input)->dSC2,msg);
+			RecMsg(((struct SocketClient*)input)->dSC1,msg);
+			EnvMsg(((struct SocketClient*)input)->dSC2,msg);
+			Reception(((struct SocketClient*)input)->dSC1,(char*) &tailleF,sizeof(int));
+			Envoi(((struct SocketClient*)input)->dSC2,(char*) &tailleF,sizeof(int));
+			for(i=0;i<(tailleF);i++){
+				RecMsg(((struct SocketClient*)input)->dSC1,msg);
+				EnvMsg(((struct SocketClient*)input)->dSC2,msg);	
+			}
 		}
 		else if(socketferme){
 			//Reception du client 2
@@ -75,7 +90,8 @@ void *fctT1(void* input){
 void *fctT2(void* input){
 	char msg[NMAX];
 	char fin[10]="fin\n";
-	
+	char file[10]="file\n";
+	int tailleF,i;
 	//Tan que le messaage de fin n'est pas envoyé
 	while(socketferme){
 		//Reception du client 2
@@ -87,6 +103,17 @@ void *fctT2(void* input){
 				perror("Probleme Fin de conv\n");
 			}
 			socketferme=0;
+		}
+		else if(!strcmp(msg,file)){
+			EnvMsg(((struct SocketClient*)input)->dSC1,msg);
+			RecMsg(((struct SocketClient*)input)->dSC2,msg);
+			EnvMsg(((struct SocketClient*)input)->dSC1,msg);
+			Reception(((struct SocketClient*)input)->dSC2,(char*) &tailleF,sizeof(int));
+			Envoi(((struct SocketClient*)input)->dSC1,(char*) &tailleF,sizeof(int));
+			for(i=0;i<(tailleF);i++){
+				RecMsg(((struct SocketClient*)input)->dSC2,msg);
+				EnvMsg(((struct SocketClient*)input)->dSC1,msg);	
+			}
 		}
 		//envoie a client 1
 		else if(socketferme){

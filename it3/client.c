@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <limits.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #define NMAX 100
 #define FMAX 10000
 
@@ -95,15 +97,24 @@ void *fctT3(void* input){
 	char msg[FMAX];
 	char nom[NMAX];
 	char dos[20]="Reception/";
-	int dS=((struct SocketServeur*)input)->dSock;
-	RecMsg(dS,nom);
+	int i,res;
+	int nbR;
+	int dS3=((struct SocketServeur*)input)->dSock;
+	//On recoit le nom du fichier
+	RecMsg(dS3,nom);
 	printf("On vous envoi le fichier %s\n",nom);
+	//On creer le fichier dans le dossier
 	FILE *f = NULL;
 	nom[strlen(nom)-1]='\0';
 	strcat(dos,nom);
 	f=fopen(dos,"w");
-	RecMsg(dS,msg);
-	fputs(msg,f);
+	//On recoit la taille du fichier
+	res = Reception(dS3,(char*) &nbR,sizeof(int));
+	printf("La taille est %d\n",nbR);
+	for(i=0; i<(nbR);i++){
+		RecMsg(dS3,msg);
+		fputs(msg,f);
+	}
 	fclose(f);
 	printf("Vous avez recu le fichier %s\n",nom);
 	pthread_exit(NULL);
@@ -115,7 +126,8 @@ void *fctT4(void* input){
 	char msg[FMAX]="";
 	char nom[NMAX];
 	char dos[20]="Envoi/";
-	int dS=((struct SocketServeur*)input)->dSock;
+	int res,cpt=0;
+	int dS4=((struct SocketServeur*)input)->dSock;
 	FILE* fp1 = new_tty();
   	fprintf(fp1,"%s\n","Ce terminal sera utilisé uniquement pour l'affichage");
 	DIR *dp;
@@ -133,24 +145,31 @@ void *fctT4(void* input){
 		perror ("Ne peux pas ouvrir le répertoire");
 	}
 	printf("Indiquer le nom du fichier : ");
-	char fileName[1023];
+	char fileName[NMAX];
 	fgets(fileName,sizeof(fileName),stdin);
-	EnvMsg(dS,fileName);
+	strcpy(nom,fileName);
 	fileName[strlen(fileName)-1]='\0';
 	strcat(dos,fileName);
+	//On ouvre le fichier demander
 	FILE *fps = fopen(dos, "r");
 	if (fps == NULL){
 		printf("Ne peux pas ouvrir le fichier suivant : %s",fileName);
 	}
 	else {
-		char str[1000];    
+		char str[1000]; 
+		//On recupere puis envoi la taille du fichier
+		while (fgets(str, 1000, fps) != NULL) {
+			cpt++;
+		}
+		EnvMsg(dS4,nom);
+		printf("La taille est %d\n",cpt);
+		fseek(fps,0, SEEK_SET);
+		res=Envoi(dS4,(char*) &cpt,sizeof(int));
 		// Lire et afficher le contenu du fichier
 		while (fgets(str, 1000, fps) != NULL) {
 			fprintf(fp1,"%s",str);
-			strcat(msg,str);
+			EnvMsg(dS4,str);
 		}
-		printf("Je suis sorti du while\n");
-		EnvMsg(dS,msg);
 		printf("J'ai envoyer texte fichier\n");
 	}
 	fclose(fps);	
