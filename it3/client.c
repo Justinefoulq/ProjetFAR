@@ -102,7 +102,7 @@ void *fctT3(void* input){
 	int dS3=((struct SocketServeur*)input)->dSock;
 	//On recoit le nom du fichier
 	RecMsg(dS3,nom);
-	printf("On vous envoi le fichier %s\n",nom);
+	//printf("On vous envoi le fichier %s\n",nom);
 	//On creer le fichier dans le dossier
 	FILE *f = NULL;
 	nom[strlen(nom)-1]='\0';
@@ -110,13 +110,13 @@ void *fctT3(void* input){
 	f=fopen(dos,"w");
 	//On recoit la taille du fichier
 	res = Reception(dS3,(char*) &nbR,sizeof(int));
-	printf("La taille est %d\n",nbR);
+	//printf("La taille est %d\n",nbR);
 	for(i=0; i<(nbR);i++){
 		RecMsg(dS3,msg);
 		fputs(msg,f);
 	}
 	fclose(f);
-	printf("Vous avez recu le fichier %s\n",nom);
+	printf("Vous avez recu le fichier %s de %s\n",nom,((struct SocketServeur*)input)->pseudo2);
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -127,17 +127,25 @@ void *fctT4(void* input){
 	char nom[NMAX];
 	char dos[20]="Envoi/";
 	int res,cpt=0;
+	char Fichiers[NMAX][NMAX];
+	int nbFichiers=0,i;
 	int dS4=((struct SocketServeur*)input)->dSock;
-	FILE* fp1 = new_tty();
-  	fprintf(fp1,"%s\n","Ce terminal sera utilisé uniquement pour l'affichage");
+	char fileName[NMAX];
+	int estFichier=0;
+	//FILE* fp1 = new_tty();
+  	//fprintf(fp1,"%s\n","Ce terminal sera utilisé uniquement pour l'affichage");
 	DIR *dp;
 	struct dirent *ep;     
 	dp = opendir ("./Envoi/");
 	if (dp != NULL) {
-		fprintf(fp1,"Voilà la liste de fichiers :\n");
+		//fprintf(fp1,"Voilà la liste de fichiers :\n");
+		printf("Voilà la liste de fichiers :\n");
 		while (ep = readdir (dp)) {
 			if(strcmp(ep->d_name,".")!=0 && strcmp(ep->d_name,"..")!=0) 
-				fprintf(fp1,"%s\n",ep->d_name);
+				//fprintf(fp1,"%s\n",ep->d_name);
+				printf("%s\n",ep->d_name);
+				strcpy(Fichiers[nbFichiers],ep->d_name);
+				nbFichiers++;
 			}    
 			(void) closedir (dp);
 		}
@@ -145,10 +153,19 @@ void *fctT4(void* input){
 		perror ("Ne peux pas ouvrir le répertoire");
 	}
 	printf("Indiquer le nom du fichier : ");
-	char fileName[NMAX];
-	fgets(fileName,sizeof(fileName),stdin);
-	strcpy(nom,fileName);
-	fileName[strlen(fileName)-1]='\0';
+	do{
+		fgets(fileName,sizeof(fileName),stdin);
+		strcpy(nom,fileName);
+		fileName[strlen(fileName)-1]='\0';
+		for(i=0;i<nbFichiers;i++){
+			if(strcmp(Fichiers[i],fileName)==0){
+				estFichier=1;
+			}
+		}
+		if(!estFichier){
+			printf("Le fichier %s n'existe pas. Indiquer un autre fichier :",fileName);
+		}
+	}while(!estFichier);
 	strcat(dos,fileName);
 	//On ouvre le fichier demander
 	FILE *fps = fopen(dos, "r");
@@ -162,15 +179,15 @@ void *fctT4(void* input){
 			cpt++;
 		}
 		EnvMsg(dS4,nom);
-		printf("La taille est %d\n",cpt);
+		//printf("La taille est %d\n",cpt);
 		fseek(fps,0, SEEK_SET);
 		res=Envoi(dS4,(char*) &cpt,sizeof(int));
 		// Lire et afficher le contenu du fichier
 		while (fgets(str, 1000, fps) != NULL) {
-			fprintf(fp1,"%s",str);
+			//fprintf(fp1,"%s",str);
 			EnvMsg(dS4,str);
 		}
-		printf("J'ai envoyer texte fichier\n");
+		printf("Envoi du fichier %s réussi\n",fileName);
 	}
 	fclose(fps);	
 	pthread_exit(NULL);
@@ -193,7 +210,7 @@ void *fctT1(void* input){
 			socketferme = 0;
 		}
 		else if(!strcmp(msg,messfile)){
-			printf("J'ai recu file\n");
+			//printf("J'ai recu file\n");
 			pthread_t T3;
 			res = pthread_create(&T3, NULL, fctT3, (void*)SS);
 			if(res<0){
@@ -296,3 +313,4 @@ int main(int argc, char ** argv){
 	pthread_kill(T2,SIGINT);
 	return 0;
 }
+
