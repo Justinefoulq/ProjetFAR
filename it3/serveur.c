@@ -210,8 +210,3 @@ int main(int argc, char ** argv){
 	close(dS1);
 	return 0;
 }
-
-
-
-
-
